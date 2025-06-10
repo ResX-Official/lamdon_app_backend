@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Booking } from '../models/booking';
+import { Notification } from '../models/notification';
 
 // Create a booking
 export const createBooking = async (req: Request, res: Response) => {
@@ -39,6 +40,11 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
     const { status } = req.body; // 'confirmed' or 'rejected'
     const booking = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!booking) return res.status(404).json({ message: 'Booking not found.' });
+    // Notify the guest about the status change
+    await Notification.create({
+      user: booking.guest,
+      message: `Your booking was ${status}.`
+    });
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: 'Error updating booking.' });
