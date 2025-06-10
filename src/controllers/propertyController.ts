@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { Property } from '../models/property';
 
-// Create property
 export const createProperty = async (req: Request, res: Response) => {
   try {
     const { title, description, address, price, images, host } = req.body;
@@ -13,7 +12,6 @@ export const createProperty = async (req: Request, res: Response) => {
   }
 };
 
-// Get all properties
 export const getProperties = async (req: Request, res: Response) => {
   try {
     const properties = await Property.find().populate('host', 'firstName lastName email');
@@ -23,7 +21,6 @@ export const getProperties = async (req: Request, res: Response) => {
   }
 };
 
-// Get single property
 export const getProperty = async (req: Request, res: Response) => {
   try {
     const property = await Property.findById(req.params.id).populate('host', 'firstName lastName email');
@@ -34,7 +31,6 @@ export const getProperty = async (req: Request, res: Response) => {
   }
 };
 
-// Update property
 export const updateProperty = async (req: Request, res: Response) => {
   try {
     const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -45,7 +41,6 @@ export const updateProperty = async (req: Request, res: Response) => {
   }
 };
 
-// Delete property
 export const deleteProperty = async (req: Request, res: Response) => {
   try {
     const property = await Property.findByIdAndDelete(req.params.id);
