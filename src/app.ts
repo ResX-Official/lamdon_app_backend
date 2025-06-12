@@ -7,6 +7,7 @@ import bookingRoutes from './routes/bookingRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import chatRoutes from './routes/chatRoutes';
 import paymentRoutes from './routes/paymentRoutes';
+import { Server } from 'socket.io';
 
 dotenv.config();
 
@@ -22,8 +23,37 @@ app.use('/api/payments', paymentRoutes);
 
 mongoose.connect(process.env.MONGO_URI!)
   .then(() => {
-    app.listen(5000, () => {
-      console.log('Server running on port 5000');
+    const http = require('http');
+    const server = http.createServer(app);
+
+    const io = new Server(server, {
+      cors: {
+        origin: '*', // Allow all origins for dev; restrict in production
+        methods: ['GET', 'POST']
+      }
+    });
+
+    // Socket.io logic
+    io.on('connection', (socket) => {
+      console.log('A user connected:', socket.id);
+
+      socket.on('joinRoom', (roomId) => {
+        socket.join(roomId);
+      });
+
+      socket.on('sendMessage', (data) => {
+        // data: { roomId, sender, message }
+        io.to(data.roomId).emit('receiveMessage', data);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+      });
+    });
+
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch(err => console.error(err));
