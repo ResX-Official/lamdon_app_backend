@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { Booking } from '../models/booking';
 import { Notification } from '../models/notification';
+import PDFDocument from 'pdfkit';
+import nodemailer from 'nodemailer';
+import { User } from '../models/user'; // To get guest email
 
 // Create a booking
 export const createBooking = async (req: Request, res: Response) => {
@@ -45,8 +48,55 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
       user: booking.guest,
       message: `Your booking was ${status}.`
     });
+    if (status === 'confirmed') {
+      await sendBookingConfirmation(booking);
+    }
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: 'Error updating booking.' });
   }
 };
+
+async function sendBookingConfirmation(booking: any) {
+  // Fetch guest user
+  const guest = await User.findById(booking.guest);
+  if (!guest) return;
+
+  // Generate PDF
+  const doc = new PDFDocument();
+  let buffers: Buffer[] = [];
+  doc.on('data', buffers.push.bind(buffers));
+  doc.on('end', async () => {
+    const pdfData = Buffer.concat(buffers);
+
+    // Send email with PDF attachment
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: guest.email,
+      subject: 'Booking Confirmation',
+      text: `Your booking for property ${booking.property} is confirmed!`,
+      attachments: [
+        {
+          filename: 'booking-confirmation.pdf',
+          content: pdfData,
+        },
+      ],
+    });
+  });
+
+  doc.text('Booking Confirmation');
+  doc.text(`Property: ${booking.property}`);
+  doc.text(`Guest: ${guest.firstName} ${guest.lastName}`);
+  doc.text(`Start Date: ${booking.startDate}`);
+  doc.text(`End Date: ${booking.endDate}`);
+  doc.text(`Status: ${booking.status}`);
+  doc.end();
+}
