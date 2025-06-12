@@ -7,6 +7,7 @@ import bookingRoutes from './routes/bookingRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import chatRoutes from './routes/chatRoutes';
 import paymentRoutes from './routes/paymentRoutes';
+import reviewRoutes from './routes/reviewRoutes';
 import { Server } from 'socket.io';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 mongoose.connect(process.env.MONGO_URI!)
   .then(() => {
