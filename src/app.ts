@@ -15,9 +15,8 @@ dotenv.config();
 
 const app = express();
 
-// --- FIXED CORS SETUP ---
 app.use(cors({
-  origin: true, // allow all origins for dev
+  origin: '*', // For development. For production, use your frontend URL.
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
