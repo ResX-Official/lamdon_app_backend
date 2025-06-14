@@ -9,10 +9,15 @@ import chatRoutes from './routes/chatRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import { Server } from 'socket.io';
+import cors from 'cors';
 
 dotenv.config();
 
 const app = express();
+app.use(cors({
+  origin: '*', // For development. For production, set this to your frontend URL.
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
