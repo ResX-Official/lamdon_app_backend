@@ -4,11 +4,11 @@ import cloudinary from './cloudinary';
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
+  params: async (req, file) => ({
     folder: 'lamdon_properties',
-    format: async (req: any, file: any) => 'png', // or use file.mimetype.split('/')[1]
-    public_id: (req: any, file: any) => file.originalname,
-  },
+    format: file.mimetype.split('/')[1], // e.g. 'jpg', 'png'
+    public_id: file.originalname,
+  }),
 });
 
 const upload = multer({ storage });
