@@ -99,8 +99,9 @@ export const register = async (req: Request, res: Response) => {
     });
 
     res.status(201).json({ message: 'Registration successful! Please check your email for the confirmation code.' });
-  } catch (err: any) {
-    res.status(500).json({ message: 'An error occurred during registration. Please try again.' });
+  } catch (err) {
+    console.error('Signup error:', err);
+    res.status(500).json({ message: 'Error registering user.' });
   }
 };
 
