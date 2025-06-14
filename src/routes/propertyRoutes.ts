@@ -1,6 +1,11 @@
 import { Router } from 'express';
-import { createProperty, getProperties, getProperty, updateProperty, deleteProperty } from '../controllers/propertyController';
-import upload from '../utils/multer';
+import {
+  createProperty,
+  getProperties,
+  getProperty,
+  updateProperty,
+  deleteProperty
+} from '../controllers/propertyController';
 
 const router = Router();
 

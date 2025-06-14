@@ -6,7 +6,8 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'lamdon_properties',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
+    format: async (req, file) => 'png', // or use file.mimetype.split('/')[1]
+    public_id: (req, file) => file.originalname,
   },
 });
 
