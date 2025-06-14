@@ -15,7 +15,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: '*', // For development. For production, set this to your frontend URL.
+  origin: '*', // For development. For production, use your frontend URL.
   credentials: true,
 }));
 app.use(express.json());
