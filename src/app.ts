@@ -15,11 +15,14 @@ dotenv.config();
 
 const app = express();
 
-// --- CORS and JSON middleware (must be before routes!) ---
+// --- FIXED CORS SETUP ---
 app.use(cors({
-  origin: '*', // For dev. For production, use your frontend URL.
+  origin: true, // allow all origins for dev
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json());
 
 // --- Register routes ---
