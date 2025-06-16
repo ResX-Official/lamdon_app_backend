@@ -13,6 +13,12 @@ import reviewRoutes from './routes/reviewRoutes';
 
 dotenv.config();
 
+console.log('MONGODB_URI:', process.env.MONGODB_URI); // <--- Add this line
+
+mongoose.connect(process.env.MONGODB_URI as string)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
 const app = express();
 
 app.use(cors({
