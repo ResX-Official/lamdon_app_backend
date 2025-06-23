@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
 
 import authRoutes from './routes/authRoutes';
 import propertyRoutes from './routes/propertyRoutes';
@@ -10,6 +11,7 @@ import notificationRoutes from './routes/notificationRoutes';
 import chatRoutes from './routes/chatRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 dotenv.config();
 
@@ -30,6 +32,9 @@ app.use(cors({
 
 app.use(express.json());
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // --- Register routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
@@ -38,6 +43,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // --- Start server ---
 const PORT = process.env.PORT || 5000;

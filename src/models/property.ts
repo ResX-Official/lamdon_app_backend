@@ -8,6 +8,8 @@ export interface IProperty extends Document {
   images: string[];
   host: mongoose.Types.ObjectId;
   available: boolean;
+  placeType?: string;
+  placeDescription?: string;
 }
 
 const propertySchema = new Schema<IProperty>({
@@ -17,7 +19,11 @@ const propertySchema = new Schema<IProperty>({
   price: { type: Number, required: true },
   images: [{ type: String }],
   host: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  available: { type: Boolean, default: true }
+  available: { type: Boolean, default: true },
+  placeType: { type: String },
+  placeDescription: { type: String }
+}, {
+  timestamps: true // Adds createdAt and updatedAt fields
 });
 
 export const Property = mongoose.model<IProperty>('Property', propertySchema);
