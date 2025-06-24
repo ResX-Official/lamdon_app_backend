@@ -3,7 +3,7 @@ import { Property } from '../models/property';
 
 export const createProperty = async (req: Request, res: Response) => {
   try {
-    const { title, description, address, price, images, host, placeType, placeDescription } = req.body;
+    const { title, description, address, price, images, host, placeType, placeDescription, guests, bedrooms, toilets } = req.body;
     
     // Validate required fields
     if (!title || !description || !address || !price || !host) {
@@ -20,7 +20,10 @@ export const createProperty = async (req: Request, res: Response) => {
       images: images || [], 
       host,
       placeType,
-      placeDescription
+      placeDescription,
+      guests,
+      bedrooms,
+      toilets
     });
     
     await property.save();
