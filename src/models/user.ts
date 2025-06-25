@@ -8,6 +8,22 @@ export interface IUser extends Document {
   password: string;
   isConfirmed: boolean;
   confirmationCode: string;
+  balance: number;
+  blocked: boolean;
+  isAdmin: boolean;
+  userType: 'guest' | 'host' | 'admin';
+  profileImage?: string;
+  address?: string;
+  dateOfBirth?: Date;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  verificationStatus: 'pending' | 'verified' | 'rejected';
+  documents?: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const userSchema = new Schema<IUser>({
@@ -17,7 +33,23 @@ const userSchema = new Schema<IUser>({
   phone:     { type: String, required: true },
   password:  { type: String, required: true },
   isConfirmed: { type: Boolean, default: false },
-  confirmationCode: { type: String }
+  confirmationCode: { type: String },
+  balance: { type: Number, default: 0 },
+  blocked: { type: Boolean, default: false },
+  isAdmin: { type: Boolean, default: false },
+  userType: { type: String, enum: ['guest', 'host', 'admin'], default: 'guest' },
+  profileImage: { type: String },
+  address: { type: String },
+  dateOfBirth: { type: Date },
+  emergencyContact: {
+    name: { type: String },
+    phone: { type: String },
+    relationship: { type: String }
+  },
+  verificationStatus: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
+  documents: [{ type: String }]
+}, {
+  timestamps: true
 });
 
 export const User = mongoose.model<IUser>('User', userSchema);

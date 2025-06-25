@@ -3,6 +3,7 @@ import { User } from '../models/user';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
 import nodemailer from 'nodemailer';
+import { generateToken } from '../utils/jwt';
 
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -129,35 +130,109 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password.' });
+      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
     }
 
     if (!user.isConfirmed) {
-      return res.status(400).json({ message: 'Please confirm your email before logging in.' });
+      return res.status(400).json({ success: false, message: 'Please confirm your email before logging in.' });
+    }
+
+    if (user.blocked) {
+      return res.status(403).json({ success: false, message: 'Your account has been blocked. Please contact support.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password.' });
+      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
     }
 
+    // Generate JWT token
+    const token = generateToken({
+      userId: user._id.toString(),
+      email: user.email,
+      isAdmin: user.isAdmin,
+      userType: user.userType
+    });
+
     res.status(200).json({
+      success: true,
       message: 'Login successful!',
+      token,
       user: {
+        id: user._id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        isAdmin: user.isAdmin,
+        userType: user.userType,
+        balance: user.balance,
+        blocked: user.blocked
       },
     });
   } catch (err) {
-    res.status(500).json({ message: 'An error occurred during login. Please try again.' });
+    res.status(500).json({ success: false, message: 'An error occurred during login. Please try again.' });
+  }
+};
+
+// Admin login endpoint
+export const adminLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
+    }
+
+    if (user.blocked) {
+      return res.status(403).json({ success: false, message: 'Your admin account has been blocked.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Generate JWT token
+    const token = generateToken({
+      userId: user._id.toString(),
+      email: user.email,
+      isAdmin: user.isAdmin,
+      userType: user.userType
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin login successful!',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isAdmin: user.isAdmin,
+        userType: user.userType
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'An error occurred during admin login. Please try again.' });
   }
 };
 
