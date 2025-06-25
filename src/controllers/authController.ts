@@ -273,3 +273,52 @@ export const resendCode = async (req: Request, res: Response) => {
 
   res.status(200).json({ message: 'A new confirmation code has been sent to your email.' });
 };
+
+// Create admin user endpoint (for development only)
+export const createAdmin = async (req: Request, res: Response) => {
+  try {
+    const { firstName, lastName, email, phone, password } = req.body;
+
+    if (!firstName || !lastName || !email || !phone || !password) {
+      return res.status(400).json({ success: false, message: 'All fields are required.' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const adminUser = new User({
+      firstName,
+      lastName,
+      email,
+      phone,
+      password: hashedPassword,
+      isConfirmed: true,
+      isAdmin: true,
+      userType: 'admin',
+      balance: 0,
+      blocked: false,
+      verificationStatus: 'verified'
+    });
+
+    await adminUser.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin user created successfully',
+      user: {
+        id: adminUser._id,
+        email: adminUser.email,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        isAdmin: adminUser.isAdmin
+      }
+    });
+  } catch (err) {
+    console.error('Create admin error:', err);
+    res.status(500).json({ success: false, message: 'Error creating admin user.' });
+  }
+};
