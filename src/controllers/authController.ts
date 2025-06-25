@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { User } from '../models/user';
+import { User, IUser } from '../models/user';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
 import nodemailer from 'nodemailer';
@@ -134,20 +134,21 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid email or password.' });
     }
+    // Type guard for IUser
+    const typedUser = user as IUser;
 
-    if (!user.isConfirmed) {
+    if (!typedUser.isConfirmed) {
       return res.status(400).json({ success: false, message: 'Please confirm your email before logging in.' });
     }
 
-    if (user.blocked) {
+    if (typedUser.blocked) {
       return res.status(403).json({ success: false, message: 'Your account has been blocked. Please contact support.' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, typedUser.password);
 
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Invalid email or password.' });
@@ -155,10 +156,10 @@ export const login = async (req: Request, res: Response) => {
 
     // Generate JWT token
     const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      isAdmin: user.isAdmin,
-      userType: user.userType
+      userId: String(typedUser._id),
+      email: typedUser.email,
+      isAdmin: typedUser.isAdmin,
+      userType: typedUser.userType
     });
 
     res.status(200).json({
@@ -166,14 +167,14 @@ export const login = async (req: Request, res: Response) => {
       message: 'Login successful!',
       token,
       user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isAdmin: user.isAdmin,
-        userType: user.userType,
-        balance: user.balance,
-        blocked: user.blocked
+        id: String(typedUser._id),
+        email: typedUser.email,
+        firstName: typedUser.firstName,
+        lastName: typedUser.lastName,
+        isAdmin: typedUser.isAdmin,
+        userType: typedUser.userType,
+        balance: typedUser.balance,
+        blocked: typedUser.blocked
       },
     });
   } catch (err) {
@@ -191,20 +192,21 @@ export const adminLogin = async (req: Request, res: Response) => {
     }
 
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid email or password.' });
     }
+    // Type guard for IUser
+    const typedUser = user as IUser;
 
-    if (!user.isAdmin) {
+    if (!typedUser.isAdmin) {
       return res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
     }
 
-    if (user.blocked) {
+    if (typedUser.blocked) {
       return res.status(403).json({ success: false, message: 'Your admin account has been blocked.' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, typedUser.password);
 
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Invalid email or password.' });
@@ -212,10 +214,10 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     // Generate JWT token
     const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      isAdmin: user.isAdmin,
-      userType: user.userType
+      userId: String(typedUser._id),
+      email: typedUser.email,
+      isAdmin: typedUser.isAdmin,
+      userType: typedUser.userType
     });
 
     res.status(200).json({
@@ -223,12 +225,12 @@ export const adminLogin = async (req: Request, res: Response) => {
       message: 'Admin login successful!',
       token,
       user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isAdmin: user.isAdmin,
-        userType: user.userType
+        id: String(typedUser._id),
+        email: typedUser.email,
+        firstName: typedUser.firstName,
+        lastName: typedUser.lastName,
+        isAdmin: typedUser.isAdmin,
+        userType: typedUser.userType
       },
     });
   } catch (err) {
@@ -305,16 +307,17 @@ export const createAdmin = async (req: Request, res: Response) => {
     });
 
     await adminUser.save();
+    const adminUserTyped = adminUser as IUser;
 
     res.status(201).json({
       success: true,
       message: 'Admin user created successfully',
       user: {
-        id: adminUser._id,
-        email: adminUser.email,
-        firstName: adminUser.firstName,
-        lastName: adminUser.lastName,
-        isAdmin: adminUser.isAdmin
+        id: String(adminUserTyped._id),
+        email: adminUserTyped.email,
+        firstName: adminUserTyped.firstName,
+        lastName: adminUserTyped.lastName,
+        isAdmin: adminUserTyped.isAdmin
       }
     });
   } catch (err) {
