@@ -8,7 +8,7 @@ import {
   initiateTransfer,
   getPaystackKeys
 } from '../controllers/paymentController';
-import { auth } from '../middleware/auth';
+import { authenticateToken as auth } from '../middleware/auth';
 
 const router = Router();
 
