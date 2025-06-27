@@ -4,12 +4,31 @@ exports.deleteProperty = exports.updateProperty = exports.getProperty = exports.
 const property_1 = require("../models/property");
 const createProperty = async (req, res) => {
     try {
-        const { title, description, address, price, images, host } = req.body;
-        const property = new property_1.Property({ title, description, address, price, images, host });
+        const { title, description, address, price, images, host, placeType, placeDescription, guests, bedrooms, toilets } = req.body;
+        // Validate required fields
+        if (!title || !description || !address || !price || !host) {
+            return res.status(400).json({
+                message: 'Missing required fields: title, description, address, price, and host are required.'
+            });
+        }
+        const property = new property_1.Property({
+            title,
+            description,
+            address,
+            price,
+            images: images || [],
+            host,
+            placeType,
+            placeDescription,
+            guests,
+            bedrooms,
+            toilets
+        });
         await property.save();
         res.status(201).json(property);
     }
     catch (err) {
+        console.error('Error creating property:', err);
         res.status(500).json({ message: 'Error creating property.' });
     }
 };
@@ -20,6 +39,7 @@ const getProperties = async (req, res) => {
         res.json(properties);
     }
     catch (err) {
+        console.error('Error fetching properties:', err);
         res.status(500).json({ message: 'Error fetching properties.' });
     }
 };
@@ -32,7 +52,8 @@ const getProperty = async (req, res) => {
         res.json(property);
     }
     catch (err) {
-        res.status(500).json({ message: 'Error' });
+        console.error('Error fetching property:', err);
+        res.status(500).json({ message: 'Error fetching property.' });
     }
 };
 exports.getProperty = getProperty;
@@ -44,6 +65,7 @@ const updateProperty = async (req, res) => {
         res.json(property);
     }
     catch (err) {
+        console.error('Error updating property:', err);
         res.status(500).json({ message: 'Error updating property.' });
     }
 };
@@ -56,6 +78,7 @@ const deleteProperty = async (req, res) => {
         res.json({ message: 'Property deleted.' });
     }
     catch (err) {
+        console.error('Error deleting property:', err);
         res.status(500).json({ message: 'Error deleting property.' });
     }
 };

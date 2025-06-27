@@ -5,5 +5,8 @@ const authController_1 = require("../controllers/authController");
 const router = (0, express_1.Router)();
 router.post('/signup', authController_1.register);
 router.post('/login', authController_1.login);
+router.post('/admin/login', authController_1.adminLogin);
+router.post('/create-admin', authController_1.createAdmin);
 router.post('/confirm-email', authController_1.confirmEmail);
+router.post('/resend-code', authController_1.resendCode);
 exports.default = router;

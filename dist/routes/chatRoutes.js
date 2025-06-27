@@ -5,4 +5,7 @@ const chatController_1 = require("../controllers/chatController");
 const router = (0, express_1.Router)();
 router.post('/', chatController_1.sendMessage);
 router.get('/booking/:bookingId', chatController_1.getChatForBooking);
+router.get('/property/:propertyId/:userId1/:userId2', chatController_1.getChatForProperty);
+router.get('/conversations/:userId', chatController_1.getUserConversations);
+router.get('/conversation/:conversationId', chatController_1.getConversationMessages);
 exports.default = router;

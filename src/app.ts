@@ -14,6 +14,7 @@ import reviewRoutes from './routes/reviewRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import balanceRoutes from './routes/balanceRoutes';
 import adminRoutes from './routes/adminRoutes';
+import profileRoutes from './routes/profileRoutes';
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/balance', balanceRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/profile', profileRoutes);
 
 // --- Start server ---
 const PORT = process.env.PORT || 5000;

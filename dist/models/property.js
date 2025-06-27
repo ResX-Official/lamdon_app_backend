@@ -42,6 +42,31 @@ const propertySchema = new mongoose_1.Schema({
     price: { type: Number, required: true },
     images: [{ type: String }],
     host: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
-    available: { type: Boolean, default: true }
+    available: { type: Boolean, default: true },
+    placeType: { type: String },
+    placeDescription: { type: String },
+    guests: { type: Number, default: 1 },
+    bedrooms: { type: Number, default: 1 },
+    toilets: { type: Number, default: 1 },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    adminNotes: { type: String },
+    rejectionReason: { type: String },
+    amenities: [{ type: String }],
+    houseRules: [{ type: String }],
+    cancellationPolicy: { type: String, default: 'Flexible' },
+    checkInTime: { type: String, default: '3:00 PM' },
+    checkOutTime: { type: String, default: '11:00 AM' },
+    maxGuests: { type: Number, required: true },
+    propertyType: { type: String, enum: ['apartment', 'house', 'villa', 'room', 'other'], required: true },
+    location: {
+        latitude: { type: Number },
+        longitude: { type: Number },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        country: { type: String, required: true },
+        zipCode: { type: String }
+    }
+}, {
+    timestamps: true
 });
 exports.Property = mongoose_1.default.model('Property', propertySchema);

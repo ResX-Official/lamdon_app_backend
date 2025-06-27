@@ -10,7 +10,7 @@ const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
     cloudinary: cloudinary_1.default,
     params: async (req, file) => ({
         folder: 'lamdon_properties',
-        format: 'png', // or use file.mimetype.split('/')[1]
+        format: file.mimetype.split('/')[1], // e.g. 'jpg', 'png'
         public_id: file.originalname,
     }),
 });

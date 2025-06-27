@@ -33,31 +33,24 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
+exports.Transaction = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const userSchema = new mongoose_1.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phone: { type: String, required: true },
-    password: { type: String, required: true },
-    isConfirmed: { type: Boolean, default: false },
-    confirmationCode: { type: String },
-    balance: { type: Number, default: 0 },
-    blocked: { type: Boolean, default: false },
-    isAdmin: { type: Boolean, default: false },
-    userType: { type: String, enum: ['guest', 'host', 'admin'], default: 'guest' },
-    profileImage: { type: String },
-    address: { type: String },
-    dateOfBirth: { type: Date },
-    emergencyContact: {
-        name: { type: String },
-        phone: { type: String },
-        relationship: { type: String }
+const transactionSchema = new mongoose_1.Schema({
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    type: { type: String, enum: ['add', 'withdraw', 'refund', 'commission'], required: true },
+    amount: { type: Number, required: true },
+    status: { type: String, enum: ['success', 'failed', 'pending'], default: 'pending' },
+    adminNotes: { type: String },
+    rejectionReason: { type: String },
+    bankDetails: {
+        accountNumber: { type: String },
+        accountName: { type: String },
+        bankName: { type: String },
+        routingNumber: { type: String }
     },
-    verificationStatus: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
-    documents: [{ type: String }]
+    paymentMethod: { type: String, enum: ['bank_transfer', 'paypal', 'stripe', 'other'] },
+    reference: { type: String }
 }, {
     timestamps: true
 });
-exports.User = mongoose_1.default.model('User', userSchema);
+exports.Transaction = mongoose_1.default.model('Transaction', transactionSchema);

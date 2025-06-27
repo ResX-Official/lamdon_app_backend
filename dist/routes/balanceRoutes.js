@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const balanceController_1 = require("../controllers/balanceController");
+const router = (0, express_1.Router)();
+router.get('/:userId', balanceController_1.getBalance);
+router.post('/:userId/add', balanceController_1.addBalance);
+router.post('/:userId/withdraw', balanceController_1.withdrawBalance);
+router.get('/:userId/history', balanceController_1.getTransactionHistory);
+exports.default = router;

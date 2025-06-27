@@ -38,8 +38,21 @@ const mongoose_1 = __importStar(require("mongoose"));
 const bookingSchema = new mongoose_1.Schema({
     property: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Property', required: true },
     guest: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    host: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    status: { type: String, enum: ['pending', 'confirmed', 'rejected'], default: 'pending' }
+    status: { type: String, enum: ['pending', 'confirmed', 'rejected', 'cancelled', 'completed'], default: 'pending' },
+    totalAmount: { type: Number, required: true },
+    numberOfGuests: { type: Number, required: true },
+    specialRequests: { type: String },
+    adminNotes: { type: String },
+    cancellationReason: { type: String },
+    checkInDate: { type: Date },
+    checkOutDate: { type: Date },
+    actualCheckInDate: { type: Date },
+    actualCheckOutDate: { type: Date },
+    paymentStatus: { type: String, enum: ['pending', 'paid', 'refunded', 'partial_refund'], default: 'pending' }
+}, {
+    timestamps: true
 });
 exports.Booking = mongoose_1.default.model('Booking', bookingSchema);
