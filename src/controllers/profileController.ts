@@ -1,27 +1,22 @@
 import { Request, Response } from 'express';
 import { User } from '../models/user';
 
-// Extend Request to include user from auth middleware
-interface AuthRequest extends Request {
-  user?: any;
-}
-
 // Get user profile
-export const getUserProfile = async (req: AuthRequest, res: Response) => {
+export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'User not authenticated' 
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
       });
     }
 
     const user = await User.findById(userId).select('-password -confirmationCode');
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
       });
     }
 
@@ -31,21 +26,21 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error getting user profile:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error getting user profile' 
+    res.status(500).json({
+      success: false,
+      message: 'Error getting user profile'
     });
   }
 };
 
 // Update user profile
-export const updateUserProfile = async (req: AuthRequest, res: Response) => {
+export const updateUserProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'User not authenticated' 
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
       });
     }
 
@@ -62,14 +57,13 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     ).select('-password -confirmationCode');
 
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
       });
     }
 
     console.log('Profile updated successfully:', user);
-
     res.json({
       success: true,
       message: 'Profile updated successfully',
@@ -77,8 +71,8 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error updating user profile:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'Error updating user profile',
       error: error instanceof Error ? error.message : 'Unknown error'
     });

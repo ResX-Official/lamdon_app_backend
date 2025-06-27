@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 
 import authRoutes from './routes/authRoutes';
+import profileRoutes from './routes/profileRoutes';
 import propertyRoutes from './routes/propertyRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import notificationRoutes from './routes/notificationRoutes';
@@ -14,7 +15,6 @@ import reviewRoutes from './routes/reviewRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import balanceRoutes from './routes/balanceRoutes';
 import adminRoutes from './routes/adminRoutes';
-import profileRoutes from './routes/profileRoutes';
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // --- Register routes ---
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -49,7 +50,6 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/balance', balanceRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/profile', profileRoutes);
 
 // --- Start server ---
 const PORT = process.env.PORT || 5000;

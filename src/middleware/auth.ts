@@ -1,39 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../models/user';
-import { verifyToken, JWTPayload } from '../utils/jwt';
+import jwt from 'jsonwebtoken';
 
-export interface AuthRequest extends Request {
-  user?: any;
-  decodedUser?: JWTPayload;
-}
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!token) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Access token required' 
+    });
+  }
+
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
-    }
-
-    // Verify JWT token
-    const decoded = verifyToken(token);
-    req.decodedUser = decoded;
-
-    // Get user from database
-    const user = await User.findById(decoded.userId).select('-password -confirmationCode');
-    
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found.' });
-    }
-
-    // Check if user is blocked
-    if (user.blocked) {
-      return res.status(403).json({ success: false, message: 'Access denied. Account is blocked.' });
-    }
-
-    req.user = user;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email,
+      isAdmin: decoded.isAdmin,
+      userType: decoded.userType
+    };
     next();
   } catch (error) {
-    res.status(401).json({ success: false, message: 'Invalid token.' });
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Invalid or expired token' 
+    });
   }
 }; 
