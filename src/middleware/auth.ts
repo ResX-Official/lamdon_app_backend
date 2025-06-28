@@ -22,9 +22,11 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     };
     next();
   } catch (error) {
+    console.error('JWT verification error:', error);
     return res.status(403).json({ 
       success: false, 
-      message: 'Invalid or expired token' 
+      message: 'Invalid or expired token',
+      error: error instanceof Error ? error.message : error
     });
   }
 }; 
