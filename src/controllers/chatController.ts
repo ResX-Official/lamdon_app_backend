@@ -49,7 +49,19 @@ export const getChatForBooking = async (req: Request, res: Response) => {
 export const getChatForProperty = async (req: Request, res: Response) => {
   try {
     const { propertyId, userId1, userId2 } = req.params;
-    
+    // Mark all messages as read where receiver is the current user (userId1) and isRead is false
+    await ChatMessage.updateMany(
+      {
+        property: propertyId,
+        receiver: userId1,
+        isRead: false,
+        $or: [
+          { sender: userId2, receiver: userId1 },
+          { sender: userId1, receiver: userId2 }
+        ]
+      },
+      { $set: { isRead: true } }
+    );
     const messages = await ChatMessage.find({ 
       property: propertyId,
       $or: [
@@ -101,11 +113,32 @@ export const getUserConversations = async (req: Request, res: Response) => {
           lastMessage: message,
           participants: [
             message.sender._id.toString() === userId ? message.receiver : message.sender
-          ]
+          ],
+          unreadCount: 0 // Will be updated below
         });
       }
     });
-    
+
+    // Count unread messages for each conversation
+    conversations.forEach((conv, key) => {
+      let unreadCount = 0;
+      messages.forEach(msg => {
+        const isSameConversation = msg.property && conv.property && msg.property._id.toString() === conv.property._id.toString()
+          ? ((msg.sender._id.toString() === userId || msg.receiver._id.toString() === userId) &&
+            ((msg.sender._id.toString() === conv.lastMessage.sender._id.toString() && msg.receiver._id.toString() === conv.lastMessage.receiver._id.toString()) ||
+             (msg.sender._id.toString() === conv.lastMessage.receiver._id.toString() && msg.receiver._id.toString() === conv.lastMessage.sender._id.toString())))
+          : msg.booking && conv.booking && msg.booking._id.toString() === conv.booking._id.toString();
+        if (
+          isSameConversation &&
+          msg.receiver._id.toString() === userId &&
+          msg.isRead === false
+        ) {
+          unreadCount++;
+        }
+      });
+      conv.unreadCount = unreadCount;
+    });
+
     const conversationList = Array.from(conversations.values());
     res.json(conversationList);
   } catch (err) {
