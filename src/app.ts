@@ -18,27 +18,57 @@ import adminRoutes from './routes/adminRoutes';
 
 dotenv.config();
 
-console.log('MONGODB_URI:', process.env.MONGODB_URI); // <--- Add this line
+// Check required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars);
+  console.error('Please check your .env file or environment configuration');
+  process.exit(1);
+}
+
+console.log('✅ Environment variables loaded successfully');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Missing');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Missing');
+
+// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI as string)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 const app = express();
 
+// CORS configuration
 app.use(cors({
-  origin: '*', // For development. For production, use your frontend URL.
+  origin: ['http://localhost:3000', 'http://localhost:8080', 'https://lamdon-app-backend.onrender.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// --- Register routes ---
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/properties', propertyRoutes);
@@ -51,8 +81,29 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/balance', balanceRoutes);
 app.use('/api/admin', adminRoutes);
 
-// --- Start server ---
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`
+  });
+});
+
+// Global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('❌ Global error handler:', err);
+  
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
 });

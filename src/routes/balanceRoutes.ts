@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { getBalance, addBalance, withdrawBalance, getTransactionHistory } from '../controllers/balanceController';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// All balance routes require authentication
+router.use(authenticateToken);
 
 router.get('/:userId', getBalance);
 router.post('/:userId/add', addBalance);
