@@ -49,6 +49,7 @@ export const getChatForBooking = async (req: Request, res: Response) => {
 export const getChatForProperty = async (req: Request, res: Response) => {
   try {
     const { propertyId, userId1, userId2 } = req.params;
+    
     // Mark all messages as read where receiver is the current user (userId1) and isRead is false
     await ChatMessage.updateMany(
       {
@@ -56,12 +57,13 @@ export const getChatForProperty = async (req: Request, res: Response) => {
         receiver: userId1,
         isRead: false,
         $or: [
-          { sender: userId2, receiver: userId1 },
-          { sender: userId1, receiver: userId2 }
+          { sender: userId2 },
+          { sender: userId1 }
         ]
       },
       { $set: { isRead: true } }
     );
+    
     const messages = await ChatMessage.find({ 
       property: propertyId,
       $or: [
