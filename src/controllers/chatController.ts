@@ -98,23 +98,28 @@ export const getUserConversations = async (req: Request, res: Response) => {
     const conversations = new Map();
     
     messages.forEach(message => {
-      const conversationKey = message.property
-        ? `property_${message.property._id}_${message.sender._id}_${message.receiver._id}`
-        : message.booking?._id
-          ? `booking_${message.booking._id}`
-          : '';
+      let conversationKey = '';
+      let otherParticipant = null;
       
-      if (!conversations.has(conversationKey)) {
+      if (message.property) {
+        // For property conversations, create a consistent key regardless of sender/receiver order
+        const participants = [message.sender._id.toString(), message.receiver._id.toString()].sort();
+        conversationKey = `property_${message.property._id}_${participants[0]}_${participants[1]}`;
+        otherParticipant = message.sender._id.toString() === userId ? message.receiver : message.sender;
+      } else if (message.booking) {
+        conversationKey = `booking_${message.booking._id}`;
+        otherParticipant = message.sender._id.toString() === userId ? message.receiver : message.sender;
+      }
+      
+      if (conversationKey && !conversations.has(conversationKey)) {
         conversations.set(conversationKey, {
           id: conversationKey,
           type: message.property ? 'property' : 'booking',
           property: message.property,
           booking: message.booking,
           lastMessage: message,
-          participants: [
-            message.sender._id.toString() === userId ? message.receiver : message.sender
-          ],
-          unreadCount: 0 // Will be updated below
+          participants: [otherParticipant],
+          unreadCount: 0
         });
       }
     });
@@ -122,20 +127,35 @@ export const getUserConversations = async (req: Request, res: Response) => {
     // Count unread messages for each conversation
     conversations.forEach((conv, key) => {
       let unreadCount = 0;
-      messages.forEach(msg => {
-        const isSameConversation = msg.property && conv.property && msg.property._id.toString() === conv.property._id.toString()
-          ? ((msg.sender._id.toString() === userId || msg.receiver._id.toString() === userId) &&
-            ((msg.sender._id.toString() === conv.lastMessage.sender._id.toString() && msg.receiver._id.toString() === conv.lastMessage.receiver._id.toString()) ||
-             (msg.sender._id.toString() === conv.lastMessage.receiver._id.toString() && msg.receiver._id.toString() === conv.lastMessage.sender._id.toString())))
-          : msg.booking && conv.booking && msg.booking._id.toString() === conv.booking._id.toString();
-        if (
-          isSameConversation &&
-          msg.receiver._id.toString() === userId &&
-          msg.isRead === false
-        ) {
-          unreadCount++;
-        }
-      });
+      
+      if (conv.type === 'property') {
+        // For property conversations, count unread messages between the two participants
+        const participants = key.split('_').slice(2); // Get the two user IDs
+        messages.forEach(msg => {
+          if (
+            msg.property && 
+            msg.property._id.toString() === conv.property._id.toString() &&
+            msg.receiver._id.toString() === userId &&
+            msg.isRead === false &&
+            (msg.sender._id.toString() === participants[0] || msg.sender._id.toString() === participants[1])
+          ) {
+            unreadCount++;
+          }
+        });
+      } else if (conv.type === 'booking') {
+        // For booking conversations, count unread messages in the booking
+        messages.forEach(msg => {
+          if (
+            msg.booking && 
+            msg.booking._id.toString() === conv.booking._id.toString() &&
+            msg.receiver._id.toString() === userId &&
+            msg.isRead === false
+          ) {
+            unreadCount++;
+          }
+        });
+      }
+      
       conv.unreadCount = unreadCount;
     });
 
