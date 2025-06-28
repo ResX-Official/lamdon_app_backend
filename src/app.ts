@@ -46,7 +46,12 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:8080', 'https://lamdon-app-backend.onrender.com'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'https://lamdon-app-backend.onrender.com',
+    'https://lamdonapp.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
