@@ -4,7 +4,8 @@ import {
   getChatForBooking, 
   getChatForProperty,
   getUserConversations,
-  getConversationMessages
+  getConversationMessages,
+  markConversationAsRead
 } from '../controllers/chatController';
 
 const router = Router();
@@ -14,5 +15,6 @@ router.get('/booking/:bookingId', getChatForBooking);
 router.get('/property/:propertyId/:userId1/:userId2', getChatForProperty);
 router.get('/conversations/:userId', getUserConversations);
 router.get('/conversation/:conversationId', getConversationMessages);
+router.post('/conversation/:conversationId/read', markConversationAsRead);
 
 export default router;
