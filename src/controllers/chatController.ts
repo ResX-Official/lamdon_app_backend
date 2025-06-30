@@ -211,30 +211,21 @@ export const getConversationMessages = async (req: Request, res: Response) => {
 export const markConversationAsRead = async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user?._id || req.user?.id || req.user;
+    const userId = req.user?.id || req.user;
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
     const parts = conversationId.split('_');
-    let query = { receiver: userId, isRead: false };
+    let query: any = { receiver: userId, isRead: false };
     if (parts[0] === 'property') {
       const propertyId = parts[1];
       const userId1 = parts[2];
       const userId2 = parts[3];
-      query = {
-        ...query,
-        property: propertyId,
-        $or: [
-          { sender: userId1 },
-          { sender: userId2 }
-        ]
-      };
+      query.property = propertyId;
+      query.$or = [{ sender: userId1 }, { sender: userId2 }];
     } else if (parts[0] === 'booking') {
       const bookingId = parts[1];
-      query = {
-        ...query,
-        booking: bookingId
-      };
+      query.booking = bookingId;
     }
     const result = await ChatMessage.updateMany(query, { $set: { isRead: true } });
     res.json({ success: true, modifiedCount: result.modifiedCount });
