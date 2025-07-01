@@ -256,7 +256,7 @@ export const initiateTransfer = async (req: Request, res: Response) => {
   }
 };
 
-export const paystackWebhook = async (req, res) => {
+export const paystackWebhook = async (req: Request, res: Response) => {
   const event = req.body;
   if (event.event === 'charge.success') {
     const reference = event.data.reference;
