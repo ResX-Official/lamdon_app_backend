@@ -5,6 +5,8 @@ import PDFDocument from 'pdfkit';
 import nodemailer from 'nodemailer';
 import { User } from '../models/user'; // To get guest email
 import { Property } from '../models/property';
+import axios from 'axios';
+import { Transaction } from '../models/transaction';
 
 // Create a booking
 export const createBooking = async (req: Request, res: Response) => {
@@ -302,3 +304,45 @@ async function sendBookingConfirmation(booking: any) {
     console.error('Error sending booking confirmation:', error);
   }
 }
+
+export const payForBooking = async (req: Request, res: Response) => {
+  const { bookingId } = req.params;
+  const { paystackReference } = req.body;
+  // 1. Verify payment with Paystack
+  const response = await axios.get(
+    `https://api.paystack.co/transaction/verify/${paystackReference}`,
+    { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+  );
+  if (response.data.data.status !== 'success') {
+    return res.status(400).json({ message: 'Payment not successful' });
+  }
+  // 2. Mark booking as paid, credit host, record transactions
+  const booking = await Booking.findById(bookingId);
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
+  if (booking.paymentStatus === 'paid') return res.status(400).json({ message: 'Booking already paid' });
+  booking.paymentStatus = 'paid';
+  booking.status = 'confirmed';
+  await booking.save();
+  // Credit host
+  const host = await User.findById(booking.host);
+  if (host) {
+    host.balance += booking.totalAmount;
+    await host.save();
+    await Transaction.create({
+      user: host._id,
+      type: 'credit',
+      amount: booking.totalAmount,
+      status: 'success',
+      adminNotes: `Booking payment from guest for booking ${bookingId}`
+    });
+  }
+  // Record guest transaction
+  await Transaction.create({
+    user: booking.guest,
+    type: 'debit',
+    amount: booking.totalAmount,
+    status: 'success',
+    adminNotes: `Booking payment to host for booking ${bookingId}`
+  });
+  res.json({ success: true });
+};

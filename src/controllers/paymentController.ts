@@ -254,4 +254,13 @@ export const initiateTransfer = async (req: Request, res: Response) => {
       error: err.response?.data?.message || err.message 
     });
   }
+};
+
+export const paystackWebhook = async (req, res) => {
+  const event = req.body;
+  if (event.event === 'charge.success') {
+    const reference = event.data.reference;
+    // Find booking by reference, mark as paid, credit host, etc.
+  }
+  res.sendStatus(200);
 }; 

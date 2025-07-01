@@ -6,7 +6,8 @@ import {
   verifyBankAccount, 
   createTransferRecipient, 
   initiateTransfer,
-  getPaystackKeys
+  getPaystackKeys,
+  paystackWebhook
 } from '../controllers/paymentController';
 import { authenticateToken as auth } from '../middleware/auth';
 
@@ -22,5 +23,6 @@ router.get('/banks', auth, getBanks);
 router.post('/verify-account', auth, verifyBankAccount);
 router.post('/create-recipient', auth, createTransferRecipient);
 router.post('/initiate-transfer', auth, initiateTransfer);
+router.post('/webhook', paystackWebhook);
 
 export default router;

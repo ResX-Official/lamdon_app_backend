@@ -22,6 +22,9 @@ export interface IUser extends Document {
   };
   verificationStatus: 'pending' | 'verified' | 'rejected';
   documents?: string[];
+  bankAccountNumber?: string;
+  bankCode?: string;
+  paystackRecipientCode?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,7 +50,10 @@ const userSchema = new Schema<IUser>({
     relationship: { type: String }
   },
   verificationStatus: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
-  documents: [{ type: String }]
+  documents: [{ type: String }],
+  bankAccountNumber: { type: String },
+  bankCode: { type: String },
+  paystackRecipientCode: { type: String },
 }, {
   timestamps: true
 });

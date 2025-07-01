@@ -5,7 +5,8 @@ import {
   getBookingsForGuest, 
   updateBookingStatus,
   checkAvailability,
-  getBookingStats
+  getBookingStats,
+  payForBooking
 } from '../controllers/bookingController';
 import { authenticateToken } from '../middleware/auth';
 
@@ -31,5 +32,8 @@ router.put('/:id/status', updateBookingStatus);
 
 // Get booking statistics for host
 router.get('/host/:hostId/stats', getBookingStats);
+
+// Pay for a booking
+router.post('/:bookingId/pay', payForBooking);
 
 export default router;
