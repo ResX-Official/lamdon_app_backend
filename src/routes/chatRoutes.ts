@@ -7,8 +7,12 @@ import {
   getConversationMessages,
   markConversationAsRead
 } from '../controllers/chatController';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// Apply authentication middleware to all chat routes
+router.use(authenticateToken);
 
 router.post('/', sendMessage);
 router.get('/booking/:bookingId', getChatForBooking);

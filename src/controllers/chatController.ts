@@ -227,6 +227,7 @@ export const markConversationAsRead = async (req: Request, res: Response) => {
       const bookingId = parts[1];
       query.booking = bookingId;
     }
+    console.log('Marking as read for user:', userId, 'conversation:', conversationId, 'query:', query);
     const result = await ChatMessage.updateMany(query, { $set: { isRead: true } });
     res.json({ success: true, modifiedCount: result.modifiedCount });
   } catch (err) {
