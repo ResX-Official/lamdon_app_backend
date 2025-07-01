@@ -11,72 +11,60 @@ import { Transaction } from '../models/transaction';
 // Create a booking
 export const createBooking = async (req: Request, res: Response) => {
   try {
-    const { 
-      property, 
-      startDate, 
-      endDate, 
-      numberOfGuests, 
-      totalAmount, 
-      specialRequests 
-    } = req.body;
-    
-    // Validate required fields
-    if (!property || !startDate || !endDate || !numberOfGuests || !totalAmount) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: property, startDate, endDate, numberOfGuests, and totalAmount are required.'
+    const { paystackReference, ...bookingDetails } = req.body;
+    if (!paystackReference) {
+      return res.status(400).json({ message: 'Payment reference is required' });
+    }
+    // 1. Verify payment with Paystack
+    const response = await axios.get(
+      `https://api.paystack.co/transaction/verify/${paystackReference}`,
+      { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+    );
+    if (response.data.data.status !== 'success') {
+      return res.status(400).json({ message: 'Payment not successful' });
+    }
+    // 2. Create booking as paid/confirmed
+    const booking = await Booking.create({
+      ...bookingDetails,
+      paymentStatus: 'paid',
+      status: 'confirmed',
+      paystackReference,
+    });
+    // 3. Credit host and record transactions
+    const host = await User.findById(booking.host);
+    if (host) {
+      // Only credit the host with the base price (remove 2% fee)
+      const basePrice = Math.round(booking.totalAmount / 1.02);
+      host.balance += basePrice;
+      await host.save();
+      await Transaction.create({
+        user: host._id,
+        type: 'credit',
+        amount: basePrice,
+        status: 'success',
+        adminNotes: `Booking payment from guest for booking ${booking._id}`
+      });
+      // Record 2% fee for admin/platform
+      const adminFee = booking.totalAmount - basePrice;
+      await Transaction.create({
+        user: null, // or admin user id if available
+        type: 'fee',
+        amount: adminFee,
+        status: 'success',
+        adminNotes: `2% platform fee for booking ${booking._id}`
       });
     }
-
-    // Get guest from authenticated user
-    const guest = req.user?.id;
-    if (!guest) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not authenticated'
-      });
-    }
-
-    // Get property to find host
-    const propertyDoc = await Property.findById(property);
-    if (!propertyDoc) {
-      return res.status(404).json({
-        success: false,
-        message: 'Property not found'
-      });
-    }
-
-    const booking = new Booking({ 
-      property, 
-      guest, 
-      host: propertyDoc.host,
-      startDate, 
-      endDate,
-      numberOfGuests,
-      totalAmount,
-      specialRequests,
-      status: 'pending',
-      paymentStatus: 'pending'
+    // Record guest transaction
+    await Transaction.create({
+      user: booking.guest,
+      type: 'debit',
+      amount: booking.totalAmount,
+      status: 'success',
+      adminNotes: `Booking payment to host for booking ${booking._id}`
     });
-    
-    await booking.save();
-    
-    // Populate related data
-    await booking.populate('property', 'title address images');
-    await booking.populate('guest', 'firstName lastName email');
-    await booking.populate('host', 'firstName lastName email');
-    
-    res.status(201).json({
-      success: true,
-      data: booking,
-      message: 'Booking created successfully'
-    });
-  } catch (err) {
-    console.error('Error creating booking:', err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Error creating booking.' 
-    });
+    res.json({ success: true, booking });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Error creating booking', error: err.message });
   }
 };
 
