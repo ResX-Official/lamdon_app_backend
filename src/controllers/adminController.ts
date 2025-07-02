@@ -125,12 +125,20 @@ export const getAllProperties = async (req: Request, res: Response) => {
 // 5. Get all users with filters
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const { userType, blocked, verificationStatus, page = 1, limit = 10 } = req.query;
+    const { userType, blocked, verificationStatus, page = 1, limit = 10, search } = req.query;
     
     const filter: any = {};
     if (userType) filter.userType = userType;
     if (blocked !== undefined) filter.blocked = blocked === 'true';
     if (verificationStatus) filter.verificationStatus = verificationStatus;
+    if (search) {
+      const searchRegex = new RegExp(search as string, 'i');
+      filter.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { _id: search }
+      ];
+    }
 
     const users = await User.find(filter)
       .select('-password -confirmationCode')
