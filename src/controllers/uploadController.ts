@@ -21,9 +21,11 @@ export const uploadImage = async (req: Request, res: Response) => {
         });
       }
 
+      console.log('File uploaded successfully:', req.file.path);
+
       res.json({ 
         success: true,
-        data: req.file.path,
+        data: [req.file.path],
         url: req.file.path 
       });
     });
@@ -57,6 +59,8 @@ export const uploadMultipleImages = async (req: Request, res: Response) => {
       }
 
       const urls = (req.files as Express.Multer.File[]).map(file => file.path);
+      console.log('Files uploaded successfully:', urls);
+
       res.json({ 
         success: true,
         data: urls,
