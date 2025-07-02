@@ -91,11 +91,12 @@ export const rejectProperty = async (req: AuthRequest, res: Response) => {
 // 4. Get all properties with filters
 export const getAllProperties = async (req: Request, res: Response) => {
   try {
-    const { status, hostId, page = 1, limit = 10 } = req.query;
+    const { status, hostId, city, page = 1, limit = 10 } = req.query;
     
     const filter: any = {};
     if (status) filter.status = status;
     if (hostId) filter.host = hostId;
+    if (city) filter['location.city'] = { $regex: new RegExp(city as string, 'i') };
 
     const properties = await Property.find(filter)
       .populate('host', 'firstName lastName email phone')

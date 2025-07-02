@@ -49,10 +49,10 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true); // Allow requests with no origin
     const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:8080',
-      'https://lamdon-app-backend.onrender.com',
-      'https://lamdonapp.vercel.app'
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'https://lamdon-app-backend.onrender.com',
+    'https://lamdonapp.vercel.app'
     ];
     // Allow all *.vercel.app subdomains
     if (/^https:\/\/lamdonapp-.*\.vercel\.app$/.test(origin)) {
