@@ -56,10 +56,7 @@ export const getChatForProperty = async (req: Request, res: Response) => {
         property: propertyId,
         receiver: userId1,
         isRead: false,
-        $or: [
-          { sender: userId2 },
-          { sender: userId1 }
-        ]
+        sender: userId2
       },
       { $set: { isRead: true } }
     );
@@ -131,7 +128,7 @@ export const getUserConversations = async (req: Request, res: Response) => {
       let unreadCount = 0;
       
       if (conv.type === 'property') {
-        // For property conversations, count unread messages between the two participants
+        // For property conversations, count unread messages where current user is receiver
         const participants = key.split('_').slice(2); // Get the two user IDs
         messages.forEach(msg => {
           if (
@@ -145,7 +142,7 @@ export const getUserConversations = async (req: Request, res: Response) => {
           }
         });
       } else if (conv.type === 'booking') {
-        // For booking conversations, count unread messages in the booking
+        // For booking conversations, count unread messages where current user is receiver
         messages.forEach(msg => {
           if (
             msg.booking && 
@@ -160,7 +157,7 @@ export const getUserConversations = async (req: Request, res: Response) => {
       
       conv.unreadCount = unreadCount;
     });
-
+    
     const conversationList = Array.from(conversations.values());
     res.json(conversationList);
   } catch (err) {

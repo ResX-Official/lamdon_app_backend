@@ -246,48 +246,48 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 
 async function sendBookingConfirmation(booking: any) {
   try {
-    // Fetch guest user
-    const guest = await User.findById(booking.guest);
-    if (!guest) return;
+  // Fetch guest user
+  const guest = await User.findById(booking.guest);
+  if (!guest) return;
 
-    // Generate PDF
-    const doc = new PDFDocument();
-    let buffers: Buffer[] = [];
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', async () => {
-      const pdfData = Buffer.concat(buffers);
+  // Generate PDF
+  const doc = new PDFDocument();
+  let buffers: Buffer[] = [];
+  doc.on('data', buffers.push.bind(buffers));
+  doc.on('end', async () => {
+    const pdfData = Buffer.concat(buffers);
 
-      // Send email with PDF attachment
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: guest.email,
-        subject: 'Booking Confirmation',
-        text: `Your booking for property ${booking.property.title} is confirmed!`,
-        attachments: [
-          {
-            filename: 'booking-confirmation.pdf',
-            content: pdfData,
-          },
-        ],
-      });
+    // Send email with PDF attachment
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
-    doc.text('Booking Confirmation');
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: guest.email,
+      subject: 'Booking Confirmation',
+        text: `Your booking for property ${booking.property.title} is confirmed!`,
+      attachments: [
+        {
+          filename: 'booking-confirmation.pdf',
+          content: pdfData,
+        },
+      ],
+    });
+  });
+
+  doc.text('Booking Confirmation');
     doc.text(`Property: ${booking.property.title}`);
-    doc.text(`Guest: ${guest.firstName} ${guest.lastName}`);
-    doc.text(`Start Date: ${booking.startDate}`);
-    doc.text(`End Date: ${booking.endDate}`);
-    doc.text(`Status: ${booking.status}`);
+  doc.text(`Guest: ${guest.firstName} ${guest.lastName}`);
+  doc.text(`Start Date: ${booking.startDate}`);
+  doc.text(`End Date: ${booking.endDate}`);
+  doc.text(`Status: ${booking.status}`);
     doc.text(`Total Amount: ₦${booking.totalAmount}`);
-    doc.end();
+  doc.end();
   } catch (error) {
     console.error('Error sending booking confirmation:', error);
   }

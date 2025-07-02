@@ -50,7 +50,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:8080',
     'https://lamdon-app-backend.onrender.com',
-    'https://lamdonapp.vercel.app'
+    'https://lamdonapp.vercel.app',
+    'https://lamdonapp-d5ijomx8p-chigozieebube9-gmailcoms-projects.vercel.app'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
