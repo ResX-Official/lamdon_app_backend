@@ -46,13 +46,23 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'https://lamdon-app-backend.onrender.com',
-    'https://lamdonapp.vercel.app',
-    'https://lamdonapp-d5ijomx8p-chigozieebube9-gmailcoms-projects.vercel.app'
-  ],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Allow requests with no origin
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'https://lamdon-app-backend.onrender.com',
+      'https://lamdonapp.vercel.app'
+    ];
+    // Allow all *.vercel.app subdomains
+    if (/^https:\/\/lamdonapp-.*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
