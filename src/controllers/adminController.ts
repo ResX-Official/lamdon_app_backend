@@ -329,6 +329,65 @@ export const getChatConversation = async (req: Request, res: Response) => {
   }
 };
 
+// 9b. Get all unique chat threads (for admin dashboard)
+export const getChatThreads = async (req: Request, res: Response) => {
+  try {
+    // Aggregate unique pairs of sender/receiver
+    const threads = await ChatMessage.aggregate([
+      {
+        $project: {
+          participants: ["$sender", "$receiver"],
+          lastMessage: "$text",
+          createdAt: 1,
+        }
+      },
+      {
+        $addFields: {
+          threadId: {
+            $cond: [
+              { $lt: ["$participants.0", "$participants.1"] },
+              { $concat: [{$toString: "$participants.0"}, "_", {$toString: "$participants.1"}] },
+              { $concat: [{$toString: "$participants.1"}, "_", {$toString: "$participants.0"}] }
+            ]
+          }
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $group: {
+          _id: "$threadId",
+          participants: { $first: "$participants" },
+          lastMessage: { $first: "$lastMessage" },
+          lastCreatedAt: { $first: "$createdAt" },
+        }
+      },
+      {
+        $sort: { lastCreatedAt: -1 }
+      }
+    ]);
+
+    // Populate user info for participants
+    const populatedThreads = await Promise.all(threads.map(async (thread: any) => {
+      const users = await User.find({ _id: { $in: thread.participants } }).select('firstName lastName email avatar');
+      return {
+        threadId: thread._id,
+        participants: users,
+        lastMessage: thread.lastMessage,
+        lastCreatedAt: thread.lastCreatedAt,
+      };
+    }));
+
+    res.json({
+      success: true,
+      data: populatedThreads
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching chat threads', error });
+  }
+};
+
 // ==================== WITHDRAWAL APPROVAL FEATURES ====================
 
 // 11. Get pending withdrawals

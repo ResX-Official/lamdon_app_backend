@@ -16,7 +16,8 @@ import {
   rejectWithdrawal,
   getAllBookings,
   updateBookingStatus,
-  getDashboardStats
+  getDashboardStats,
+  getChatThreads
 } from '../controllers/adminController';
 
 const router = Router();
@@ -52,5 +53,8 @@ router.post('/withdrawals/:id/reject', rejectWithdrawal);
 // ==================== BOOKING MANAGEMENT ====================
 router.get('/bookings', getAllBookings);
 router.put('/bookings/:id/status', updateBookingStatus);
+
+// ==================== CHAT THREADS ====================
+router.get('/chat-threads', getChatThreads);
 
 export default router; 
