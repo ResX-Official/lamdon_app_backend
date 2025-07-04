@@ -352,9 +352,7 @@ export const getChatThreads = async (req: Request, res: Response) => {
           }
         }
       },
-      {
-        $sort: { createdAt: -1 }
-      },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: "$threadId",
@@ -363,28 +361,35 @@ export const getChatThreads = async (req: Request, res: Response) => {
           lastCreatedAt: { $first: "$createdAt" },
         }
       },
-      {
-        $sort: { lastCreatedAt: -1 }
-      }
+      { $sort: { lastCreatedAt: -1 } }
     ]);
 
-    // Populate user info for participants
+    // Defensive: filter out threads with missing participants
     const populatedThreads = await Promise.all(threads.map(async (thread: any) => {
-      const users = await User.find({ _id: { $in: thread.participants } }).select('firstName lastName email avatar');
-      return {
-        threadId: thread._id,
-        participants: users,
-        lastMessage: thread.lastMessage,
-        lastCreatedAt: thread.lastCreatedAt,
-      };
+      try {
+        const users = await User.find({ _id: { $in: thread.participants } }).select('firstName lastName email avatar');
+        if (!users || users.length === 0) {
+          console.warn('No users found for thread', thread._id);
+        }
+        return {
+          threadId: thread._id,
+          participants: users,
+          lastMessage: thread.lastMessage,
+          lastCreatedAt: thread.lastCreatedAt,
+        };
+      } catch (err) {
+        console.error('Error populating users for thread', thread._id, err);
+        return null;
+      }
     }));
 
     res.json({
       success: true,
-      data: populatedThreads
+      data: populatedThreads.filter(Boolean)
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching chat threads', error });
+  } catch (error: any) {
+    console.error('Error in getChatThreads:', error);
+    res.status(500).json({ success: false, message: 'Error fetching chat threads', error: error.message });
   }
 };
 
