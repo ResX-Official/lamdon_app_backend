@@ -12,7 +12,7 @@ import { AuthRequest } from '../middleware/adminAuth';
 export const getPendingProperties = async (req: Request, res: Response) => {
   try {
     const properties = await Property.find({ status: 'pending' })
-      .populate('host', 'firstName lastName email phone')
+      .populate('host', 'firstName lastName email phone profileImage')
       .sort({ createdAt: -1 });
     
     res.json({
@@ -99,7 +99,7 @@ export const getAllProperties = async (req: Request, res: Response) => {
     if (city) filter['location.city'] = { $regex: new RegExp(city as string, 'i') };
 
     const properties = await Property.find(filter)
-      .populate('host', 'firstName lastName email phone')
+      .populate('host', 'firstName lastName email phone profileImage userType')
       .sort({ createdAt: -1 })
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit));

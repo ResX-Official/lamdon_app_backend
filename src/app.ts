@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 import authRoutes from './routes/authRoutes';
 import profileRoutes from './routes/profileRoutes';
@@ -128,10 +130,65 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
+// Create HTTP and Socket.IO servers
+const httpServer = createServer(app);
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: "*", // Allow all origins for simplicity, but tighten in production
+    methods: ["GET", "POST"],
+  },
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('🔌 New client connected', socket.id);
+
+  // User joins a room based on their user ID
+  socket.on('join', (data) => {
+    if (data.userId) {
+      socket.join(data.userId);
+      console.log(`User ${data.userId} joined their room`);
+    }
+  });
+
+  // Join a specific conversation room
+  socket.on('join_conversation', (data) => {
+    if (data.conversationId) {
+      socket.join(data.conversationId);
+      console.log(`Client ${socket.id} joined conversation ${data.conversationId}`);
+    }
+  });
+
+  // Leave a conversation room
+  socket.on('leave_conversation', (data) => {
+    if (data.conversationId) {
+      socket.leave(data.conversationId);
+      console.log(`Client ${socket.id} left conversation ${data.conversationId}`);
+    }
+  });
+
+  // Listen for new messages
+  socket.on('send_message', (data) => {
+    const { conversationId, message, imageUrl, senderId } = data;
+    io.to(conversationId).emit('new_message', {
+      conversationId,
+      message,
+      imageUrl,
+      senderId,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Handle disconnect
+  socket.on('disconnect', () => {
+    console.log('Client disconnected', socket.id);
+  });
+});
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔌 Socket.IO server ready`);
 });
