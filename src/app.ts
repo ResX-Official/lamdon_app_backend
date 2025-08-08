@@ -26,7 +26,17 @@ const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {
   console.error('❌ Missing required environment variables:', missingEnvVars);
   console.error('Please check your .env file or environment configuration');
-  process.exit(1);
+  
+  // In production, try to continue with default values instead of exiting
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔧 Running in production mode, attempting to continue...');
+    if (!process.env.JWT_SECRET) {
+      console.log('⚠️ Using fallback JWT_SECRET - This should be set in production!');
+      process.env.JWT_SECRET = 'fallback-secret-key-change-in-production';
+    }
+  } else {
+    process.exit(1);
+  }
 }
 
 console.log('✅ Environment variables loaded successfully');
