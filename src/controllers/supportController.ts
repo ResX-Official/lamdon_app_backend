@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SupportTicket } from '../models/supportTicket';
 import { Notification } from '../models/notification';
+import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 
 // Create a new support ticket
@@ -24,13 +25,13 @@ export const createSupportTicket = async (req: Request, res: Response) => {
     }
 
     const ticket = new SupportTicket({
-      user: userId,
+      user: new mongoose.Types.ObjectId(userId),
       title,
       description,
       category,
       priority: priority || 'medium',
       messages: [{
-        sender: userId,
+        sender: new mongoose.Types.ObjectId(userId),
         senderType: 'user',
         message: description,
         timestamp: new Date()
@@ -77,7 +78,7 @@ export const getUserSupportTickets = async (req: Request, res: Response) => {
       });
     }
 
-    const filter: any = { user: userId };
+    const filter: any = { user: new mongoose.Types.ObjectId(userId) };
     if (status) filter.status = status;
     if (category) filter.category = category;
 
@@ -125,9 +126,9 @@ export const getSupportTicket = async (req: Request, res: Response) => {
       });
     }
 
-    const filter: any = { _id: id };
+    const filter: any = { _id: new mongoose.Types.ObjectId(id) };
     if (!isAdmin) {
-      filter.user = userId; // Users can only see their own tickets
+      filter.user = new mongoose.Types.ObjectId(userId); // Users can only see their own tickets
     }
 
     const ticket = await SupportTicket.findOne(filter)
@@ -178,9 +179,9 @@ export const addMessageToTicket = async (req: Request, res: Response) => {
       });
     }
 
-    const filter: any = { _id: id };
+    const filter: any = { _id: new mongoose.Types.ObjectId(id) };
     if (!isAdmin) {
-      filter.user = userId; // Users can only reply to their own tickets
+      filter.user = new mongoose.Types.ObjectId(userId); // Users can only reply to their own tickets
     }
 
     const ticket = await SupportTicket.findOne(filter);
@@ -194,7 +195,7 @@ export const addMessageToTicket = async (req: Request, res: Response) => {
 
     // Add message
     ticket.messages.push({
-      sender: userId,
+      sender: new mongoose.Types.ObjectId(userId),
       senderType: isAdmin ? 'admin' : 'user',
       message,
       timestamp: new Date()
@@ -227,7 +228,7 @@ export const addMessageToTicket = async (req: Request, res: Response) => {
     } else {
       // User replied, notify admin (use user ID as string for now)
       await new Notification({
-        recipient: userId,
+        recipient: new mongoose.Types.ObjectId(userId),
         title: 'Support Ticket Reply',
         message: `User replied to support ticket: ${ticket.title}`,
         type: 'support',
@@ -263,7 +264,7 @@ export const closeSupportTicket = async (req: Request, res: Response) => {
       });
     }
 
-    const ticket = await SupportTicket.findOne({ _id: id, user: userId });
+    const ticket = await SupportTicket.findOne({ _id: new mongoose.Types.ObjectId(id), user: new mongoose.Types.ObjectId(userId) });
 
     if (!ticket) {
       return res.status(404).json({
@@ -298,7 +299,7 @@ export const getAllSupportTickets = async (req: Request, res: Response) => {
     if (status) filter.status = status;
     if (category) filter.category = category;
     if (priority) filter.priority = priority;
-    if (assignedTo) filter.assignedTo = assignedTo;
+    if (assignedTo) filter.assignedTo = new mongoose.Types.ObjectId(assignedTo as string);
     
     if (search) {
       const searchRegex = new RegExp(search as string, 'i');
@@ -353,9 +354,11 @@ export const updateSupportTicket = async (req: Request, res: Response) => {
       }
     }
     if (priority) updateData.priority = priority;
-    if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
+    if (assignedTo !== undefined) {
+      updateData.assignedTo = assignedTo ? new mongoose.Types.ObjectId(assignedTo) : null;
+    }
 
-    const ticket = await SupportTicket.findByIdAndUpdate(id, updateData, { new: true })
+    const ticket = await SupportTicket.findByIdAndUpdate(new mongoose.Types.ObjectId(id), updateData, { new: true })
       .populate('user', 'firstName lastName email')
       .populate('assignedTo', 'firstName lastName email');
 
