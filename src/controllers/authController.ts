@@ -356,7 +356,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     await typedUser.save();
 
     // Send email
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,

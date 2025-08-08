@@ -283,10 +283,10 @@ export const initializeBookingPayment = async (req: Request, res: Response) => {
       });
     }
 
-    // Get booking details
+    // Get booking details with proper typing
     const booking = await Booking.findById(bookingId)
       .populate('property', 'title address price host')
-      .populate('guest', 'firstName lastName email');
+      .populate('guest', 'firstName lastName email') as any;
 
     if (!booking) {
       return res.status(404).json({
@@ -386,10 +386,10 @@ export const verifyBookingPayment = async (req: Request, res: Response) => {
     const transaction = paystackResponse.data.data;
 
     if (transaction.status === 'success') {
-      // Find booking by reference
+      // Find booking by reference with proper typing
       const booking = await Booking.findOne({ paymentReference: reference })
         .populate('property', 'title address host')
-        .populate('guest', 'firstName lastName email');
+        .populate('guest', 'firstName lastName email') as any;
 
       if (booking) {
         // Update booking status
@@ -437,20 +437,20 @@ export const verifyBookingPayment = async (req: Request, res: Response) => {
         // Generate PDF receipt
         try {
           const receiptPath = await generatePDFReceipt({
-            bookingId: booking._id.toString(),
+            bookingId: String(booking._id),
             propertyTitle: booking.property.title,
             propertyAddress: booking.property.address,
             guestName: `${booking.guest.firstName} ${booking.guest.lastName}`,
             guestEmail: booking.guest.email,
-            checkInDate: booking.checkInDate.toDateString(),
-            checkOutDate: booking.checkOutDate.toDateString(),
+            checkInDate: booking.checkInDate?.toDateString() || '',
+            checkOutDate: booking.checkOutDate?.toDateString() || '',
             totalAmount: booking.totalAmount,
             paymentReference: reference,
             createdAt: booking.createdAt.toDateString()
           });
 
           // Send confirmation email with receipt
-          const transporter = nodemailer.createTransporter({
+          const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
               user: process.env.EMAIL_USER,
@@ -470,8 +470,8 @@ export const verifyBookingPayment = async (req: Request, res: Response) => {
                 <div style="background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px;">
                   <h3>${booking.property.title}</h3>
                   <p><strong>Address:</strong> ${booking.property.address}</p>
-                  <p><strong>Check-in:</strong> ${booking.checkInDate.toDateString()}</p>
-                  <p><strong>Check-out:</strong> ${booking.checkOutDate.toDateString()}</p>
+                  <p><strong>Check-in:</strong> ${booking.checkInDate?.toDateString() || 'TBD'}</p>
+                  <p><strong>Check-out:</strong> ${booking.checkOutDate?.toDateString() || 'TBD'}</p>
                   <p><strong>Total Amount:</strong> ₦${booking.totalAmount.toLocaleString()}</p>
                   <p><strong>Payment Reference:</strong> ${reference}</p>
                 </div>

@@ -18,6 +18,7 @@ export interface IBooking extends Document {
   actualCheckOutDate?: Date;
   paymentStatus: 'pending' | 'paid' | 'refunded' | 'partial_refund';
   paystackReference?: string;
+  paymentReference?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +41,7 @@ const bookingSchema = new Schema<IBooking>({
   actualCheckOutDate: { type: Date },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'refunded', 'partial_refund'], default: 'pending' },
   paystackReference: { type: String },
+  paymentReference: { type: String },
 }, {
   timestamps: true
 });

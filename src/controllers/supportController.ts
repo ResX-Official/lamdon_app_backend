@@ -225,9 +225,9 @@ export const addMessageToTicket = async (req: Request, res: Response) => {
         relatedTicket: ticket._id
       }).save();
     } else {
-      // User replied, notify admin
+      // User replied, notify admin (use user ID as string for now)
       await new Notification({
-        recipient: null, // For all admins
+        recipient: userId,
         title: 'Support Ticket Reply',
         message: `User replied to support ticket: ${ticket.title}`,
         type: 'support',
