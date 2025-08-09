@@ -352,7 +352,7 @@ export const getChatThreads = async (req: Request, res: Response) => {
       {
         $project: {
           participants: ["$sender", "$receiver"],
-          lastMessage: "$text",
+          lastMessage: "$message",
           createdAt: 1,
         }
       },
