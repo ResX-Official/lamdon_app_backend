@@ -347,24 +347,18 @@ export const getChatConversation = async (req: Request, res: Response) => {
 // 9b. Get all unique chat threads (for admin dashboard)
 export const getChatThreads = async (req: Request, res: Response) => {
   try {
-    // Aggregate unique pairs of sender/receiver
+    // Get all unique sender-receiver pairs
     const threads = await ChatMessage.aggregate([
-      {
-        $project: {
-          participants: ["$sender", "$receiver"],
-          lastMessage: "$message",
-          createdAt: 1,
-        }
-      },
       {
         $addFields: {
           threadId: {
             $cond: [
-              { $lt: ["$participants.0", "$participants.1"] },
-              { $concat: [{$toString: "$participants.0"}, "_", {$toString: "$participants.1"}] },
-              { $concat: [{$toString: "$participants.1"}, "_", {$toString: "$participants.0"}] }
+              { $lt: ["$sender", "$receiver"] },
+              { $concat: [{$toString: "$sender"}, "_", {$toString: "$receiver"}] },
+              { $concat: [{$toString: "$receiver"}, "_", {$toString: "$sender"}] }
             ]
-          }
+          },
+          participants: ["$sender", "$receiver"]
         }
       },
       { $sort: { createdAt: -1 } },
@@ -372,14 +366,14 @@ export const getChatThreads = async (req: Request, res: Response) => {
         $group: {
           _id: "$threadId",
           participants: { $first: "$participants" },
-          lastMessage: { $first: "$lastMessage" },
+          lastMessage: { $first: "$message" },
           lastCreatedAt: { $first: "$createdAt" },
         }
       },
       { $sort: { lastCreatedAt: -1 } }
     ]);
 
-    // Defensive: filter out threads with missing participants
+    // Populate user details for each thread
     const populatedThreads = await Promise.all(threads.map(async (thread: any) => {
       try {
         const users = await User.find({ _id: { $in: thread.participants } }).select('firstName lastName email profileImage');
