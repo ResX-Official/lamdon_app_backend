@@ -72,6 +72,10 @@ app.use(cors({
     if (/^https:\/\/lamdonapp-.*\.vercel\.app$/.test(origin)) {
       return callback(null, true);
     }
+    // Allow all lamdon-admin-panel deployments on vercel
+    if (/^https:\/\/lamdon-admin-panel-.*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
