@@ -65,7 +65,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:8080',
     'https://lamdon-app-backend.onrender.com',
-    'https://lamdonapp.vercel.app'
+    'https://lamdonapp.vercel.app',
+    'https://lamdon-admin-panel.vercel.app'
     ];
     // Allow all *.vercel.app subdomains
     if (/^https:\/\/lamdonapp-.*\.vercel\.app$/.test(origin)) {
